@@ -112,7 +112,6 @@
       color: var(--text-dim);
     }
 
-    /* Suggestions dropdown */
     .suggestions {
       position: absolute;
       top: 100%;
@@ -320,7 +319,18 @@
       { name: "Utrecht A2",       locale: "en-nl", slug: "utrecht" },
       { name: "Wilp A1",          locale: "en-nl", slug: "wilp" },
 
-      // Other stores you already had
+      // Germany stores (from suitsupply.com/en-de/stores/germany) :contentReference[oaicite:4]{index=4}
+      { name: "Berlin Münzstraße",          locale: "en-de", slug: "berlin" },                // Berlin main store
+      { name: "Düsseldorf Königsallee",     locale: "en-de", slug: "dusseldorf" },           // dusseldorf
+      { name: "Frankfurt Neue Mainzer",     locale: "en-de", slug: "frankfurt" },            // frankfurt
+      { name: "Hamburg Bleichenbrücke",     locale: "en-de", slug: "hamburg" },              // main Hamburg
+      { name: "Hamburg Breuninger",         locale: "en-de", slug: "hamburg-breuninger" },   // confirmed slug :contentReference[oaicite:5]{index=5}
+      { name: "Leipzig Breuninger",         locale: "en-de", slug: "leipzig-breuninger" },   // inferred, Breuninger in Leipzig
+      { name: "Munich Brienner Strasse",    locale: "en-de", slug: "munich" },               // main Munich
+      { name: "Munich Breuninger",          locale: "en-de", slug: "munich-breuninger" },    // inferred pattern like hamburg-breuninger
+      { name: "Stuttgart Dorotheen Quartier", locale: "en-de", slug: "stuttgart" },          // confirmed slug :contentReference[oaicite:6]{index=6}
+
+      // US / others
       { name: "Milan",                locale: "en-de", slug: "milan" },
       { name: "NY Madison Avenue",    locale: "en-us", slug: "newyork-madison" },
       { name: "NY Hudson Yards",      locale: "en-us", slug: "newyork-hudson" },
@@ -412,13 +422,20 @@
     function findBestStore(q) {
       const lower = q.trim().toLowerCase();
       if (!lower) return null;
+
+      // startsWith first
       let store = storesData.find(s => s.name.toLowerCase().startsWith(lower));
-      if (!store) store = storesData.find(s => s.name.toLowerCase().includes(lower));
+      // fallback to includes
+      if (!store) {
+        store = storesData.find(s => s.name.toLowerCase().includes(lower));
+      }
+
       return store || null;
     }
 
     function handleInputChange() {
       const q = inputEl.value.trim().toLowerCase();
+
       const best = findBestStore(q);
       renderResult(best);
 
@@ -427,12 +444,17 @@
         return;
       }
 
-      const matches = storesData.filter(s => s.name.toLowerCase().includes(q)).slice(0, 8);
+      const matches = storesData
+        .filter(s => s.name.toLowerCase().includes(q))
+        .slice(0, 8);
+
       showSuggestions(matches);
     }
 
     document.addEventListener("click", (e) => {
-      if (!e.target.closest(".input-wrap")) hideSuggestions();
+      if (!e.target.closest(".input-wrap")) {
+        hideSuggestions();
+      }
     });
 
     inputEl.addEventListener("input", handleInputChange);
