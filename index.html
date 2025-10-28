@@ -16,10 +16,12 @@
       --radius-lg: 0.75rem;
       --radius-sm: 0.5rem;
     }
+
     * {
       box-sizing: border-box;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", sans-serif;
     }
+
     body {
       background-color: var(--bg);
       color: var(--text-main);
@@ -29,6 +31,7 @@
       align-items: flex-start;
       justify-content: center;
     }
+
     .app {
       width: 100%;
       max-width: 480px;
@@ -38,7 +41,9 @@
       padding: 1.5rem 1.5rem 2rem;
       box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
     }
+
     header { margin-bottom: 1.5rem; }
+
     .title {
       font-size: 1.1rem;
       font-weight: 600;
@@ -49,6 +54,7 @@
       gap: .5rem;
       flex-wrap: wrap;
     }
+
     .badge {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.15);
@@ -59,13 +65,14 @@
       color: var(--text-dim);
       line-height: 1.2;
     }
+
     .desc {
       font-size: .8rem;
       font-weight: 400;
       color: var(--text-dim);
       line-height: 1.4;
-      margin-top: .5rem;
     }
+
     .field-label {
       font-size: .7rem;
       font-weight: 500;
@@ -73,16 +80,26 @@
       letter-spacing: .05em;
       color: var(--text-dim);
       margin-bottom: .5rem;
+      margin-top: 1.5rem;
     }
+
     .input-wrap {
       background-color: rgba(255,255,255,0.03);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .input-row {
+      display: flex;
       align-items: center;
       padding: .75rem .9rem;
+      width: 100%;
     }
-    .input-wrap input {
+
+    .input-row input {
       background: transparent;
       border: none;
       outline: none;
@@ -90,7 +107,56 @@
       font-size: .9rem;
       color: var(--text-main);
     }
-    .input-wrap input::placeholder { color: var(--text-dim); }
+
+    .input-row input::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* Suggestions dropdown */
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #1f1f22;
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+      z-index: 10;
+    }
+
+    .suggestion-item {
+      padding: .6rem .9rem;
+      font-size: .8rem;
+      line-height: 1.3;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .suggestion-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .suggestion-name {
+      font-weight: 500;
+    }
+
+    .suggestion-locale {
+      font-size: .7rem;
+      color: var(--text-dim);
+    }
+
+    .suggestion-item:hover {
+      background-color: rgba(255,255,255,0.07);
+    }
+
     .results-card {
       margin-top: 1rem;
       background-color: rgba(255,255,255,0.02);
@@ -98,12 +164,14 @@
       border-radius: var(--radius-lg);
       padding: 1rem 1rem 1.25rem;
     }
+
     .result-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: .75rem;
     }
+
     .store-name {
       font-size: .9rem;
       font-weight: 600;
@@ -111,6 +179,7 @@
       line-height: 1.3;
       word-break: break-word;
     }
+
     .locale-pill {
       font-size: .65rem;
       line-height: 1.2;
@@ -121,6 +190,7 @@
       color: var(--text-dim);
       min-width: max-content;
     }
+
     .url-label {
       margin-top: .75rem;
       font-size: .7rem;
@@ -129,8 +199,16 @@
       letter-spacing: .05em;
       color: var(--text-dim);
     }
-    .url-box {
+
+    .url-row {
       margin-top: .4rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: flex-start;
+    }
+
+    .url-box {
       background-color: rgba(0,0,0,0.4);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -139,14 +217,41 @@
       line-height: 1.4;
       color: var(--accent);
       word-break: break-all;
-      cursor: pointer;
       user-select: all;
+      flex: 1 1 auto;
+      min-width: 200px;
     }
+
+    .actions-col {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      min-width: 110px;
+    }
+
+    .action-btn {
+      background-color: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius-sm);
+      padding: .5rem .75rem;
+      font-size: .75rem;
+      line-height: 1.2;
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .action-btn:active {
+      transform: scale(.98);
+    }
+
     .no-result {
       font-size: .8rem;
       line-height: 1.4;
       color: var(--text-dim);
     }
+
     footer {
       margin-top: 1.5rem;
       text-align: center;
@@ -154,6 +259,7 @@
       line-height: 1.4;
       color: var(--text-dim);
     }
+
     footer code {
       background: rgba(255,255,255,0.07);
       border: 1px solid rgba(255,255,255,0.15);
@@ -174,11 +280,13 @@
       <div class="desc">Type any store and get its official Suitsupply URL.</div>
     </header>
 
-    <div class="field">
-      <div class="field-label">Store lookup</div>
-      <div class="input-wrap">
+    <div class="field-label">Store lookup</div>
+
+    <div class="input-wrap">
+      <div class="input-row">
         <input id="searchInput" type="text" placeholder="Try: Milan, Amsterdam, NY Soho…" autocomplete="off" />
       </div>
+      <div id="suggestions" class="suggestions"></div>
     </div>
 
     <div id="resultCard" class="results-card">
@@ -194,21 +302,43 @@
 
   <script>
     const storesData = [
-      { name: "Amsterdam", locale: "en-nl", slug: "amsterdam" },
-      { name: "Hoofddorp A4", locale: "en-nl", slug: "hoofddorp" },
-      { name: "Milan", locale: "en-de", slug: "milan" },
-      { name: "NY Madison Avenue", locale: "en-us", slug: "newyork-madison" },
-      { name: "NY Hudson Yards", locale: "en-us", slug: "newyork-hudson" },
-      { name: "NY Soho", locale: "en-us", slug: "newyork-soho" },
-      { name: "NY Williamsburg", locale: "en-us", slug: "nywilliamsburg" },
-      { name: "Roosevelt Field", locale: "en-us", slug: "rooseveltfield" }
+      // Netherlands stores
+      { name: "Amsterdam",        locale: "en-nl", slug: "amsterdam" },
+      { name: "Breda",            locale: "en-nl", slug: "breda" },
+      { name: "Den Bosch",        locale: "en-nl", slug: "denbosch" },
+      { name: "The Hague",        locale: "en-nl", slug: "denhaag" },
+      { name: "Groningen",        locale: "en-nl", slug: "groningen" },
+      { name: "Haarlem",          locale: "en-nl", slug: "haarlem" },
+      { name: "Hoofddorp A4",     locale: "en-nl", slug: "hoofddorp" },
+      { name: "Laren",            locale: "en-nl", slug: "laren" },
+      { name: "Leiden",           locale: "en-nl", slug: "leiden" },
+      { name: "Lelystad",         locale: "en-nl", slug: "lelystad" },
+      { name: "Maastricht",       locale: "en-nl", slug: "maastricht" },
+      { name: "Roosendaal",       locale: "en-nl", slug: "roosendaal" },
+      { name: "Rotterdam",        locale: "en-nl", slug: "rotterdam" },
+      { name: "Utrecht",          locale: "en-nl", slug: "utrecht" },
+      { name: "Utrecht A2",       locale: "en-nl", slug: "utrecht" },
+      { name: "Wilp A1",          locale: "en-nl", slug: "wilp" },
+
+      // Other stores you already had
+      { name: "Milan",                locale: "en-de", slug: "milan" },
+      { name: "NY Madison Avenue",    locale: "en-us", slug: "newyork-madison" },
+      { name: "NY Hudson Yards",      locale: "en-us", slug: "newyork-hudson" },
+      { name: "NY Soho",              locale: "en-us", slug: "newyork-soho" },
+      { name: "NY Williamsburg",      locale: "en-us", slug: "nywilliamsburg" },
+      { name: "Roosevelt Field",      locale: "en-us", slug: "rooseveltfield" }
     ];
 
     const inputEl = document.getElementById("searchInput");
     const resultInner = document.getElementById("resultInner");
+    const suggestionsEl = document.getElementById("suggestions");
 
     function buildStoreURL(locale, slug) {
       return `https://suitsupply.com/${locale}/stores/${slug}`;
+    }
+
+    function setClipboard(text) {
+      navigator.clipboard.writeText(text).catch(() => {});
     }
 
     function renderResult(store) {
@@ -216,29 +346,97 @@
         resultInner.innerHTML = `<div class="no-result">No match. Add this store to <code>storesData</code>.</div>`;
         return;
       }
+
       const fullURL = buildStoreURL(store.locale, store.slug);
+
       resultInner.innerHTML = `
         <div class="result-header">
           <div class="store-name">${store.name}</div>
           <div class="locale-pill">${store.locale}</div>
         </div>
         <div class="url-label">Full URL</div>
-        <div class="url-box">${fullURL}</div>`;
+        <div class="url-row">
+          <div class="url-box" id="urlBox">${fullURL}</div>
+          <div class="actions-col">
+            <button class="action-btn" id="copyBtn">Copy URL</button>
+            <a class="action-btn" id="openBtn" href="${fullURL}" target="_blank" rel="noopener noreferrer">Open link</a>
+          </div>
+        </div>
+      `;
+
+      const copyBtn = document.getElementById("copyBtn");
+      copyBtn.addEventListener("click", () => {
+        setClipboard(fullURL);
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => (copyBtn.textContent = "Copy URL"), 1500);
+      });
     }
 
-    function handleSearch() {
-      const q = inputEl.value.trim().toLowerCase();
-      if (!q) {
-        resultInner.innerHTML = `<div class="no-result">Start typing a store name to see a match.</div>`;
+    function pickStore(store) {
+      inputEl.value = store.name;
+      renderResult(store);
+      hideSuggestions();
+    }
+
+    function showSuggestions(list) {
+      if (!list.length) {
+        hideSuggestions();
         return;
       }
-      const found =
-        storesData.find(s => s.name.toLowerCase().startsWith(q)) ||
-        storesData.find(s => s.name.toLowerCase().includes(q));
-      renderResult(found);
+
+      suggestionsEl.innerHTML = list.map(store => `
+        <div class="suggestion-item" data-name="${store.name}">
+          <div class="suggestion-left">
+            <div class="suggestion-name">${store.name}</div>
+            <div class="suggestion-locale">${store.locale}</div>
+          </div>
+        </div>
+      `).join("");
+
+      suggestionsEl.style.display = "block";
+
+      const items = suggestionsEl.querySelectorAll(".suggestion-item");
+      items.forEach(item => {
+        item.addEventListener("click", () => {
+          const name = item.getAttribute("data-name");
+          const store = storesData.find(s => s.name === name);
+          if (store) pickStore(store);
+        });
+      });
     }
 
-    inputEl.addEventListener("input", handleSearch);
+    function hideSuggestions() {
+      suggestionsEl.style.display = "none";
+    }
+
+    function findBestStore(q) {
+      const lower = q.trim().toLowerCase();
+      if (!lower) return null;
+      let store = storesData.find(s => s.name.toLowerCase().startsWith(lower));
+      if (!store) store = storesData.find(s => s.name.toLowerCase().includes(lower));
+      return store || null;
+    }
+
+    function handleInputChange() {
+      const q = inputEl.value.trim().toLowerCase();
+      const best = findBestStore(q);
+      renderResult(best);
+
+      if (!q) {
+        hideSuggestions();
+        return;
+      }
+
+      const matches = storesData.filter(s => s.name.toLowerCase().includes(q)).slice(0, 8);
+      showSuggestions(matches);
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".input-wrap")) hideSuggestions();
+    });
+
+    inputEl.addEventListener("input", handleInputChange);
+    inputEl.addEventListener("focus", handleInputChange);
   </script>
 </body>
 </html>
