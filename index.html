@@ -95,6 +95,7 @@
     .input-row {
       display: flex;
       align-items: center;
+      gap: .5rem;
       padding: .75rem .9rem;
       width: 100%;
     }
@@ -110,6 +111,24 @@
 
     .input-row input::placeholder {
       color: var(--text-dim);
+    }
+
+    /* Clear button style */
+    .clear-btn {
+      background-color: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm);
+      color: var(--text-dim);
+      font-size: .7rem;
+      line-height: 1.2;
+      padding: .4rem .6rem;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .clear-btn:active {
+      transform: scale(.97);
     }
 
     .suggestions {
@@ -181,6 +200,12 @@
       word-break: break-word;
     }
 
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
     .country-pill {
       font-size: .65rem;
       line-height: 1.2;
@@ -201,12 +226,6 @@
       border: 1px solid rgba(255,255,255,0.15);
       color: var(--text-dim);
       min-width: max-content;
-    }
-
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .5rem;
     }
 
     .url-label {
@@ -303,6 +322,7 @@
     <div class="input-wrap">
       <div class="input-row">
         <input id="searchInput" type="text" placeholder="Try: dubai moe, panama city, dusseldorf, madrid…" autocomplete="off" />
+        <button id="clearBtn" class="clear-btn" title="Clear search">Clear</button>
       </div>
       <div id="suggestions" class="suggestions"></div>
     </div>
@@ -323,9 +343,8 @@
     // Helper functions
     // -------------------------------------------------
 
-    // normalizeText:
-    // lowercases, strips accents, turns ü->u, ä->a, ß->ss, etc.
     function normalizeText(str) {
+      // lowercases, strips accents, and normalizes ß/ü/etc
       return str
         .toLowerCase()
         .normalize("NFD")
@@ -336,8 +355,7 @@
         .replace(/ä/g, "a");
     }
 
-    // Levenshtein distance:
-    // how many single-character edits to go from a -> b
+    // Levenshtein distance = how many single-character edits to transform a -> b
     function levenshtein(a, b) {
       const m = a.length;
       const n = b.length;
@@ -350,9 +368,9 @@
         for (let j = 1; j <= n; j++) {
           const cost = a[i - 1] === b[j - 1] ? 0 : 1;
           dp[i][j] = Math.min(
-            dp[i - 1][j] + 1,
-            dp[i][j - 1] + 1,
-            dp[i - 1][j - 1] + cost
+            dp[i - 1][j] + 1,     // deletion
+            dp[i][j - 1] + 1,     // insertion
+            dp[i - 1][j - 1] + cost // substitution
           );
         }
       }
@@ -372,26 +390,14 @@
     // -------------------------------------------------
     //
     // Each entry:
-    //  name: label in UI
-    //  country: "United States", "Spain", etc.
-    //  locale: e.g. "en-nl"
-    //  slug: last part of the URL
-    //  aliases: typos / shorthand / mall names / neighborhood names
-    //
-    // United States store list was gathered from Suitsupply’s live U.S. locator on 28 Oct 2025,
-    // which shows locations like Atlanta, Austin, Bellevue, Boston, Chicago, Dallas, Denver,
-    // Edina Minneapolis, Greenwich, Houston, King of Prussia, LA Abbot Kinney, LA Century City,
-    // Las Vegas, Miami Beach, Miami Brickell, NJ Short Hills, NY Brookfield Place, NY Hudson Yards,
-    // NY Madison Avenue, NY Soho, NY Williamsburg, Newport Beach, Philadelphia, Plano,
-    // Roosevelt Field Mall, San Francisco, San Jose, Scottsdale, Seattle Downtown,
-    // St. Louis, Tysons Galleria (McLean VA), Washington DC. :contentReference[oaicite:1]{index=1}
-    //
-    // Other countries and cities were gathered from their respective country pages
-    // (Netherlands, Germany, Spain, Sweden, Switzerland, UAE, etc.) and specific store pages,
-    // same date 28 Oct 2025. :contentReference[oaicite:2]{index=2}
+    //  name: Store label in UI
+    //  country: Country label in UI
+    //  locale: URL locale piece
+    //  slug: URL slug
+    //  aliases: misspellings / mall names / nicknames
     //
     const storesData = [
-      // Netherlands (en-nl)
+      // Netherlands
       { name: "Amsterdam", country: "Netherlands", locale: "en-nl", slug: "amsterdam", aliases: ["ams","amsterdam"] },
       { name: "Breda", country: "Netherlands", locale: "en-nl", slug: "breda", aliases: ["breda"] },
       { name: "Den Bosch", country: "Netherlands", locale: "en-nl", slug: "denbosch", aliases: ["den bosch","denbosch","s-hertogenbosch","hertogenbosch"] },
@@ -409,7 +415,7 @@
       { name: "Utrecht A2", country: "Netherlands", locale: "en-nl", slug: "utrecht", aliases: ["utrecht a2","a2","utrecht"] },
       { name: "Wilp A1", country: "Netherlands", locale: "en-nl", slug: "wilp", aliases: ["wilp","a1","wilp a1"] },
 
-      // Germany (en-de)
+      // Germany
       { name: "Berlin Münzstraße", country: "Germany", locale: "en-de", slug: "berlin", aliases: ["berlin","munzstrasse","munzstraße","munzstrase"] },
       { name: "Düsseldorf Königsallee", country: "Germany", locale: "en-de", slug: "dusseldorf", aliases: ["dusseldorf","düsseldorf","dusseldof","dusseldorff","konigsallee","königsallee","koenigsallee","konig","dusseldolf"] },
       { name: "Frankfurt Neue Mainzer", country: "Germany", locale: "en-de", slug: "frankfurt", aliases: ["frankfurt","frankfut","mainzer","neue mainzer"] },
@@ -420,62 +426,62 @@
       { name: "Munich Breuninger", country: "Germany", locale: "en-de", slug: "munich-breuninger", aliases: ["munich breuninger","munchen breuninger","muenchen breuninger","breuninger munich"] },
       { name: "Stuttgart Dorotheen Quartier", country: "Germany", locale: "en-de", slug: "stuttgart", aliases: ["stuttgart","stutgart","dorotheen quartier","dorotheenquartier","dorotheen"] },
 
-      // United Kingdom (en-gb)
+      // United Kingdom
       { name: "London Lime Street", country: "United Kingdom", locale: "en-gb", slug: "london-lime", aliases: ["london lime","lime street","lime st","city of london","ec3m","london lime street"] },
       { name: "London Vigo Street", country: "United Kingdom", locale: "en-gb", slug: "london-vigo", aliases: ["london vigo","vigo street","vigo st","w1s","regent street","piccadilly"] },
       { name: "London Westfield", country: "United Kingdom", locale: "en-gb", slug: "london-westfield", aliases: ["westfield","westfield london","shepherds bush","w12","westfeild","westfield mall london"] },
 
-      // Belgium (en-be)
+      // Belgium
       { name: "Brussels", country: "Belgium", locale: "en-be", slug: "brussels", aliases: ["brussels","bruxelles","brussel","marnixlaan","marnix laan","belgium"] },
       { name: "Antwerp", country: "Belgium", locale: "en-be", slug: "antwerp", aliases: ["antwerp","antwerpen","antwarp","belgium antwerp"] },
 
-      // Denmark (en-dk)
+      // Denmark
       { name: "Copenhagen", country: "Denmark", locale: "en-dk", slug: "copenhagen", aliases: ["copenhagen","kopenhagen","københavn","kobenhavn","grønnegade","gronnegade","denmark","cph"] },
 
-      // Estonia (en-ee)
+      // Estonia
       { name: "Tallinn", country: "Estonia", locale: "en-ee", slug: "tallinn", aliases: ["tallinn","talinn","rotermanni","rotermanni 14","estonia"] },
 
-      // Finland (en-fi)
+      // Finland
       { name: "Helsinki", country: "Finland", locale: "en-fi", slug: "helsinki", aliases: ["helsinki","helsinky","etelaesplanadi","eteläesplanadi","esplanadi","finland","esplanade"] },
 
-      // France (en-fr)
+      // France
       { name: "Paris", country: "France", locale: "en-fr", slug: "paris", aliases: ["paris","rue de la paix","rue dela paix","rue de la paix 20","75002","france paris","pariis"] },
 
-      // Latvia (en-lv)
+      // Latvia
       { name: "Riga", country: "Latvia", locale: "en-lv", slug: "riga", aliases: ["riga","rigga","galleria riga","dzirnavu 67","latvia"] },
 
-      // Lithuania (en-lt)
+      // Lithuania
       { name: "Vilnius", country: "Lithuania", locale: "en-lt", slug: "vilnius", aliases: ["vilnius","vilnus","europa sc","europa mall","konstitucijos","lithuania","vilnius europa"] },
 
-      // Spain (en-es)
+      // Spain
       { name: "Madrid", country: "Spain", locale: "en-es", slug: "madrid", aliases: ["madrid","madrid villanueva","calle villanueva","villanueva 20","spain madrid","madrid store"] },
 
-      // Sweden (en-se)
+      // Sweden
       { name: "Stockholm", country: "Sweden", locale: "en-se", slug: "stockholm", aliases: ["stockholm","stockhom","norrlandsgatan","norrlandsgatan 13","sweden","sthlm"] },
 
-      // Switzerland (en-ch)
+      // Switzerland
       { name: "Zürich", country: "Switzerland", locale: "en-ch", slug: "zurich", aliases: ["zurich","zuerich","zürich","nuschelerstrasse","nüschelerstrasse","nusschelerstrasse","switzerland","zrh"] },
 
-      // United Arab Emirates (en-ae)
+      // United Arab Emirates
       { name: "Dubai Gate Avenue (DIFC)", country: "United Arab Emirates", locale: "en-ae", slug: "dubaiga", aliases: ["dubai gate avenue","gate avenue","difc","dubai difc","dubai gate av","gate av","uae dubai"] },
       { name: "Dubai Mall of the Emirates", country: "United Arab Emirates", locale: "en-ae", slug: "dubaimoe", aliases: ["dubai moe","mall of the emirates","moe","dubai mall of emirates","uae dubai mall","dubai mall emirates"] },
 
-      // Australia (en-au)
+      // Australia
       { name: "Sydney", country: "Australia", locale: "en-au", slug: "sydney", aliases: ["sydney","sydney martin place","martin place","australia","sydney cbd"] },
 
-      // Canada (en-ca)
+      // Canada
       { name: "Montréal", country: "Canada", locale: "en-ca", slug: "montreal", aliases: ["montreal","montréal","mtl","montreall","quebec","qc"] },
       { name: "Toronto", country: "Canada", locale: "en-ca", slug: "toronto", aliases: ["toronto","torono","yorkville","bloor","toronto on","toronto canada"] },
       { name: "Vancouver", country: "Canada", locale: "en-ca", slug: "vancouver", aliases: ["vancouver","vancover","van city","vancouver bc","bc"] },
 
-      // Panama (served under en-us)
+      // Panama
       { name: "Panama City", country: "Panama", locale: "en-us", slug: "panama-city", aliases: ["panama","panama city","panamá","multiplaza","multiplaza mall","panama mall","panama ciudad"] },
 
-      // China Mainland (en-cn)
+      // China Mainland
       { name: "Beijing", country: "China Mainland", locale: "en-cn", slug: "beijing", aliases: ["beijing","peking","dongdaqiao","chaoyang","bejing","bejing china"] },
       { name: "Shanghai Anfu Road", country: "China Mainland", locale: "en-cn", slug: "shanghai-mansion", aliases: ["shanghai","anfu road","anfu lu","xuhui","shanghai anfu","shanghai mansion","shanghai china"] },
 
-      // South Korea (en-kr)
+      // South Korea
       { name: "Seoul Cheongdam", country: "South Korea", locale: "en-kr", slug: "seoul", aliases: ["seoul","seoul cheongdam","cheongdam","cheongdam flagship","gangnam","gangnam-gu","cheongdam seoul"] },
       { name: "Seoul Hannam", country: "South Korea", locale: "en-kr", slug: "seoulhannam", aliases: ["seoul hannam","hannam","hannam flagship","yongsan-gu","itaewon","han nam"] },
       { name: "Seoul Lotte Main", country: "South Korea", locale: "en-kr", slug: "seoullm", aliases: ["lotte main","lotte main seoul","lotte namdaemun","namdaemun","lotte dept main","lotte main store","seoul lotte main"] },
@@ -485,11 +491,10 @@
       { name: "Seoul Coex Mall", country: "South Korea", locale: "en-kr", slug: "seoulcoexmall", aliases: ["coex","coex mall","coexmall","coex seoul","gangnam coex"] },
       { name: "Busan Lotte", country: "South Korea", locale: "en-kr", slug: "busan", aliases: ["busan","busan lotte","lotte busan","gaya-daero","busanjin-gu","pusan"] },
 
-      // Italy (Milan) — observed hosted under en-de/milan
+      // Italy
       { name: "Milan", country: "Italy", locale: "en-de", slug: "milan", aliases: ["milan","milano","milan italy","italy milan"] },
 
-      // United States (en-us)
-      // New York metro
+      // United States
       { name: "NY Madison Avenue", country: "United States", locale: "en-us", slug: "newyork-madison", aliases: ["madison","madison ave","ny madison","new york madison","madison avenue","madison nyc"] },
       { name: "NY Hudson Yards", country: "United States", locale: "en-us", slug: "newyork-hudson", aliases: ["hudson","hudson yards","ny hudson","new york hudson","hudsonyard","hudson yards nyc"] },
       { name: "NY Soho", country: "United States", locale: "en-us", slug: "newyork-soho", aliases: ["soho","ny soho","new york soho","soho nyc","soho manhattan"] },
@@ -502,22 +507,16 @@
       { name: "Philadelphia", country: "United States", locale: "en-us", slug: "philadelphia", aliases: ["philadelphia","philly","locust street","center city","phila"] },
       { name: "Washington DC", country: "United States", locale: "en-us", slug: "washington", aliases: ["dc","washington","washington dc","district of columbia","dupont","georgetown"] },
       { name: "Tysons Galleria", country: "United States", locale: "en-us", slug: "tysons", aliases: ["tysons","tysons corner","tyson's","mclean","virginia","tysons galleria"] },
-
-      // Boston / Northeast / Midwest
       { name: "Boston", country: "United States", locale: "en-us", slug: "boston", aliases: ["boston","newbury street","back bay","massachusetts","ma boston"] },
       { name: "Chicago", country: "United States", locale: "en-us", slug: "chicago", aliases: ["chicago","rush street","gold coast","chitown","chi"] },
       { name: "Edina Minneapolis", country: "United States", locale: "en-us", slug: "minneapolis", aliases: ["edina","minneapolis","galleria edina","twin cities","mn","minnesota"] },
       { name: "St. Louis", country: "United States", locale: "en-us", slug: "stlouis", aliases: ["st louis","st. louis","saint louis","maryland plaza","missouri","stl"] },
-
-      // Texas / South / Southeast
       { name: "Dallas", country: "United States", locale: "en-us", slug: "dallas", aliases: ["dallas","mckinney ave","uptown dallas","texas dallas","tx dallas"] },
       { name: "Houston", country: "United States", locale: "en-us", slug: "houston", aliases: ["houston","westheimer","river oaks","houston tx","htx"] },
       { name: "Austin", country: "United States", locale: "en-us", slug: "austin", aliases: ["austin","domain blvd","domain northside","atx","austin tx"] },
       { name: "Atlanta", country: "United States", locale: "en-us", slug: "atlanta", aliases: ["atlanta","lenox","around lenox","atl","atl ga","lenox mall"] },
       { name: "Miami Beach", country: "United States", locale: "en-us", slug: "miamibeach", aliases: ["miami beach","south beach","1000 17th street","miami bch","miami beach fl"] },
       { name: "Miami Brickell", country: "United States", locale: "en-us", slug: "miamibrickell", aliases: ["brickell","brickell city centre","brickell city center","miami brickell","downtown miami"] },
-
-      // West Coast
       { name: "LA Abbot Kinney", country: "United States", locale: "en-us", slug: "abbotkinney", aliases: ["abbot kinney","abbotkinney","venice","venice beach","los angeles","la abbot kinney"] },
       { name: "LA Century City", country: "United States", locale: "en-us", slug: "lacenturycity", aliases: ["century city","la century city","10250 santa monica blvd","los angeles","la"] },
       { name: "Newport Beach", country: "United States", locale: "en-us", slug: "newportbeach", aliases: ["newport beach","fashion island","newport center drive","oc","orange county","oc newport"] },
@@ -538,19 +537,19 @@
     const inputEl = document.getElementById("searchInput");
     const resultInner = document.getElementById("resultInner");
     const suggestionsEl = document.getElementById("suggestions");
+    const clearBtn = document.getElementById("clearBtn");
 
-    // allKeysForStore:
-    // return normalized list of store.name and aliases for searching
+    // Collect normalized keys for each store (name, country, aliases)
     function allKeysForStore(store) {
       const arr = [store.name, store.country];
       if (store.aliases) arr.push(...store.aliases);
       return arr.map(k => normalizeText(k));
     }
 
-    // findBestStore:
+    // Core match logic:
     // 1. startsWith
     // 2. includes
-    // 3. fuzzy distance (<=2 edits)
+    // 3. fuzzy (edit distance <= 2)
     function findBestStore(queryRaw) {
       const q = normalizeText(queryRaw.trim());
       if (!q) return null;
@@ -575,7 +574,7 @@
 
       // pass 3: fuzzy distance
       let best = null;
-      let bestDistance = 3; // protective cap so total nonsense doesn't match
+      let bestDistance = 3;
       for (const store of storesData) {
         for (const key of allKeysForStore(store)) {
           const dist = levenshtein(q, key);
@@ -588,12 +587,10 @@
       if (best && bestDistance <= 2) {
         return best;
       }
-
       return null;
     }
 
-    // findSuggestionList:
-    // rank stores by closeness to query and return up to 8
+    // For dropdown suggestions: score each store by closeness
     function findSuggestionList(queryRaw) {
       const q = normalizeText(queryRaw.trim());
       if (!q) return [];
@@ -603,10 +600,8 @@
         for (const key of allKeysForStore(store)) {
           const keyNorm = normalizeText(key);
           const dist = levenshtein(q, keyNorm);
-
           const starts = keyNorm.startsWith(q) ? 0 : 10;
           const incl = keyNorm.includes(q) ? 1 : 10;
-
           const localScore = Math.min(dist, starts, incl);
           if (localScore < score) score = localScore;
         }
@@ -629,7 +624,7 @@
       if (!store) {
         resultInner.innerHTML = `
           <div class="no-result">
-            No match. Add this store to <code>storesData</code>.
+            Start typing a store name to see a match.
           </div>
         `;
         return;
@@ -700,6 +695,14 @@
       suggestionsEl.style.display = "none";
     }
 
+    // Reset UI to initial state
+    function resetUI() {
+      inputEl.value = "";
+      hideSuggestions();
+      renderResult(null);
+    }
+
+    // Handle typing/focus
     function handleInputChange() {
       const q = inputEl.value;
 
@@ -710,14 +713,17 @@
       showSuggestions(list);
     }
 
+    // Clicking outside closes dropdown
     document.addEventListener("click", (e) => {
       if (!e.target.closest(".input-wrap")) {
         hideSuggestions();
       }
     });
 
+    // Events
     inputEl.addEventListener("input", handleInputChange);
     inputEl.addEventListener("focus", handleInputChange);
+    clearBtn.addEventListener("click", resetUI);
   </script>
 </body>
 </html>
